@@ -20,25 +20,77 @@ const joinGame = async ({ userId, gameId, user }) => {
         return false;
     }
 
-    const game = await Game.findOne({
-        _id: gameId,
-    });
-    console.log(game.playersIds);
+    try {
+        const game = await Game.findOne({
+            _id: gameId,
+        });
+        // console.log(game.playersIds);
 
-    if (!game) {
+        if (!game) {
+            return false;
+        }
+
+        if (game.playersIds.includes(userId)) {
+            return game;
+        }
+
+        const uniquePlayerIds = _.uniq(game.playersIds);
+
+        if (uniquePlayerIds?.length >= game.maxPlayers) {
+            return false;
+        }
+
+        game.playersIds.push(userId);
+        game.players.push(user);
+        const newGame = await game.save();
+        return newGame;
+    } catch (error) {
         return false;
     }
-
-    if (game.playersIds.includes(userId)) {
-        return game;
-    }
-
-    const uniquePlayerIds = _.uniq(game.playersIds);
-
-    game.playersIds.push(userId);
-    game.players.push(user);
-    const newGame = await game.save();
-    return newGame;
 };
 
-module.exports = { createGame, joinGame };
+const leaveAllGames = async (playerId) => {
+    try {
+        const games = await Game.updateMany(
+            { playersIds: playerId },
+            {
+                $pullAll: {
+                    playersIds: [playerId],
+                },
+                $pull: {
+                    players: { userId: playerId },
+                },
+            },
+            { new: true, multi: true }
+        );
+
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+};
+
+const leaveGame = async ({ userId: playerId, gameId }) => {
+    try {
+        const games = await Game.updateOne(
+            { _id: gameId },
+            {
+                $pullAll: {
+                    playersIds: [playerId],
+                },
+                $pull: {
+                    players: { userId: playerId },
+                },
+            },
+            { new: true, multi: true }
+        );
+
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+};
+
+module.exports = { createGame, joinGame, leaveAllGames, leaveGame };
