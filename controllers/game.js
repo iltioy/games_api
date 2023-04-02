@@ -1,4 +1,3 @@
-const User = require("../models/User");
 const Game = require("../models/Game");
 const { BadRequestError } = require("../errors");
 const _ = require("lodash");
@@ -105,6 +104,19 @@ const startGame = async ({ userId, gameId }) => {
 
         if (isUserInGame) {
             game.gameStatus = "playing";
+
+            const turnId = game.gameState.playersTurn;
+            const numOfPlayers = _.uniq(game.playersIds).length;
+
+            game.gameState.playersTurnIds = [];
+
+            game.gameState.playersTurnIds.push(
+                game.players[turnId % numOfPlayers]._id
+            );
+            game.gameState.playersTurnIds.push(
+                game.players[(turnId + 1) % numOfPlayers]._id
+            );
+
             await game.save();
             return game;
         } else {
@@ -115,10 +127,36 @@ const startGame = async ({ userId, gameId }) => {
     }
 };
 
+const ready = async ({ _id, gameId }) => {
+    try {
+        const game = await Game.findOne({ _id: gameId });
+
+        if (!game) {
+            return false;
+        }
+
+        game.gameState.playersReady.push(_id);
+        await game.save();
+
+        return game;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+};
+
+const startRound = async ({ gameId }) => {
+    try {
+        const game = await Game.findOne({ _id: gameId });
+    } catch (error) {}
+};
+
 module.exports = {
     createGame,
     joinGame,
     leaveAllGames,
     leaveGame,
     startGame,
+    ready,
+    startRound,
 };

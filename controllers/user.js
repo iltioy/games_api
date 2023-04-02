@@ -20,15 +20,15 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const { id } = req.body;
+    const { userId } = req.body;
 
-    if (!id) {
+    if (!userId) {
         res.status(400).send("Name is required");
         return;
     }
 
     const user = await User.findOne({
-        userId: id,
+        userId,
     });
 
     if (!user) {

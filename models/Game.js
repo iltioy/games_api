@@ -5,6 +5,14 @@ const GameStateSchema = new mongoose.Schema({
         type: Number,
         defalut: 0,
     },
+    playersTurnIds: {
+        type: [String],
+        default: [],
+    },
+    playersReady: {
+        type: [String],
+        default: [],
+    },
     scores: {
         type: Array,
         default: [],
@@ -22,8 +30,14 @@ const GameSchema = new mongoose.Schema(
             type: GameStateSchema,
             default: {
                 playersTurn: 0,
+                playersTurnIds: [],
+                playersReady: [],
                 scores: [],
             },
+        },
+        gameStack: {
+            type: Array,
+            default: [],
         },
         gameType: {
             type: String,
