@@ -161,6 +161,15 @@ module.exports = (io) => {
                     socket.broadcast
                         .to(body.gameId)
                         .emit("next_word", { gameId: body.gameId });
+
+                    if (body.wordIndex) {
+                        const game = await Game.findOne({ _id: body.gameId });
+                        if (!game) {
+                            return;
+                        }
+                        game.gameState.lastWordIndex = body.wordIndex;
+                        game.save();
+                    }
                 }
             } catch (err) {
                 console.log(err);

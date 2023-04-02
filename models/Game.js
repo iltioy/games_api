@@ -17,6 +17,10 @@ const GameStateSchema = new mongoose.Schema({
         type: Array,
         default: [],
     },
+    lastWordIndex: {
+        type: Number,
+        default: 0,
+    },
 });
 
 const GameSchema = new mongoose.Schema(
