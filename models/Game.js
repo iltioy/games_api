@@ -1,5 +1,16 @@
 const mongoose = require("mongoose");
 
+const GameStateSchema = new mongoose.Schema({
+    playersTurn: {
+        type: Number,
+        defalut: 0,
+    },
+    scores: {
+        type: Array,
+        default: [],
+    },
+});
+
 const GameSchema = new mongoose.Schema(
     {
         gameStatus: {
@@ -8,8 +19,11 @@ const GameSchema = new mongoose.Schema(
             default: "not started",
         },
         gameState: {
-            type: Array,
-            default: [],
+            type: GameStateSchema,
+            default: {
+                playersTurn: 0,
+                scores: [],
+            },
         },
         gameType: {
             type: String,

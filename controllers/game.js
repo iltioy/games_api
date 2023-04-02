@@ -93,4 +93,32 @@ const leaveGame = async ({ userId: playerId, gameId }) => {
     }
 };
 
-module.exports = { createGame, joinGame, leaveAllGames, leaveGame };
+const startGame = async ({ userId, gameId }) => {
+    try {
+        const game = await Game.findOne({ _id: gameId });
+
+        if (!game) {
+            return false;
+        }
+
+        const isUserInGame = game.playersIds.includes(userId);
+
+        if (isUserInGame) {
+            game.gameStatus = "playing";
+            await game.save();
+            return game;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        return false;
+    }
+};
+
+module.exports = {
+    createGame,
+    joinGame,
+    leaveAllGames,
+    leaveGame,
+    startGame,
+};

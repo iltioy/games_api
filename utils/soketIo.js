@@ -1,7 +1,13 @@
 require("dotenv").config();
 const { generateWords } = require("../games/alias");
 const { findUser } = require("../controllers/user");
-const { joinGame, leaveAllGames, leaveGame } = require("../controllers/game");
+const {
+    joinGame,
+    leaveAllGames,
+    leaveGame,
+    startGame,
+} = require("../controllers/game");
+const _ = require("lodash");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
@@ -27,7 +33,14 @@ module.exports = (io) => {
                 // });
 
                 // io.to(socket.id).emit("game_state", game);
-                io.to(game._id.toString()).emit("game_state", game);
+                io.to(game._id.toString()).emit("game_state", {
+                    players: game.players,
+                    gameStatus: game.gameStatus,
+                    gameState: game.gameState,
+                    gameType: game.gameType,
+                    maxPlayers: game.maxPlayers,
+                    _id: game._id,
+                });
                 // io.to(socket.id).emit("game_state", game);
             }
         });
@@ -57,9 +70,26 @@ module.exports = (io) => {
         });
 
         socket.on("start_round", (gameId) => {
-            console.log("first");
             const words = generateWords();
             io.to(gameId).emit("round_started", { words });
+        });
+
+        socket.on("start_game", async ({ gameId, userId }) => {
+            if (!userId || !gameId) {
+                return;
+            }
+            const game = await startGame({ userId, gameId });
+
+            const numOfPlayers = _.uniq(game.playersIds).length;
+
+            if (game) {
+                io.to(gameId).emit("game_started", {
+                    _id: game._id,
+                    players: game.players,
+                    playersTurn: game.gameState.playersTurn,
+                    numOfPlayers: numOfPlayers,
+                });
+            }
         });
     });
 };
