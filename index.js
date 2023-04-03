@@ -15,6 +15,7 @@ const server = http.createServer(app);
 // routes
 const userRouter = require("./routes/user");
 const gameRouter = require("./routes/game");
+const wordsProfileRouter = require("./routes/wordsProfile");
 
 // error handlers middlewares
 const notFountMiddleware = require("./middleware/notFound");
@@ -39,6 +40,7 @@ app.use(express.json());
 
 app.use("/api/v1/game", userRouter);
 app.use("/api/v1/game", gameRouter);
+app.use("/api/v1/words", wordsProfileRouter);
 
 app.use(notFountMiddleware);
 app.use(errorHandlerMiddleware);
