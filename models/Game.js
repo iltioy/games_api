@@ -27,7 +27,7 @@ const GameSchema = new mongoose.Schema(
     {
         gameStatus: {
             type: String,
-            enum: ["not started", "playing", "ended"],
+            enum: ["not started", "playing", "ended", "break"],
             default: "not started",
         },
         gameState: {

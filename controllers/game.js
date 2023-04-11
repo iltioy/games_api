@@ -23,7 +23,6 @@ const joinGame = async ({ userId, gameId, user }) => {
         const game = await Game.findOne({
             _id: gameId,
         });
-        // console.log(game.playersIds);
 
         if (!game) {
             return false;
@@ -151,6 +150,41 @@ const startRound = async ({ gameId }) => {
     } catch (error) {}
 };
 
+const endRound = async ({ gameId }) => {
+    try {
+        const game = await Game.findOne({ _id: gameId });
+        if (!game) {
+            return false;
+        }
+        console.log(game.gameStatus);
+        if (game.gameStatus !== "playing") {
+            return false;
+        }
+
+        game.gameState.playersTurn += 1;
+        const turnId = game.gameState.playersTurn;
+        const numOfPlayers = _.uniq(game.playersIds).length;
+
+        game.gameState.playersTurnIds = [];
+
+        game.gameState.playersTurnIds.push(
+            game.players[turnId % numOfPlayers]._id
+        );
+        game.gameState.playersTurnIds.push(
+            game.players[(turnId + 1) % numOfPlayers]._id
+        );
+        game.gameState.playersReady = [];
+        game.gameState.lastWordIndex = 0;
+        game.gameStatus = "break";
+
+        await game.save();
+
+        return game;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 module.exports = {
     createGame,
     joinGame,
@@ -159,4 +193,5 @@ module.exports = {
     startGame,
     ready,
     startRound,
+    endRound,
 };

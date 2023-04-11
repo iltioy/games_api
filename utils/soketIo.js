@@ -8,6 +8,7 @@ const {
     startGame,
     ready,
     startRound,
+    endRound,
 } = require("../controllers/game");
 const _ = require("lodash");
 const Game = require("../models/Game");
@@ -92,9 +93,12 @@ module.exports = (io) => {
 
         socket.on("start_round", async (gameId) => {
             try {
-                const words = generateWords();
+                if (!gameId) return;
 
-                io.to(gameId).emit("round_started", { words, gameId });
+                const game = await Game.findOne({ _id: gameId });
+                game.gameStatus = "playing";
+                console.log(game);
+                await game.save();
             } catch (err) {
                 console.log(err);
             }
@@ -146,6 +150,7 @@ module.exports = (io) => {
                         }
 
                         game.gameStack = words;
+                        game.gameStatus = "playing";
                         await game.save();
                         io.to(gameId).emit("round_started", { words, gameId });
                     }
@@ -167,12 +172,35 @@ module.exports = (io) => {
                         if (!game) {
                             return;
                         }
-                        game.gameState.lastWordIndex = body.wordIndex;
-                        game.save();
+                        if (game.gameState.lastWordIndex !== body.wordIndex) {
+                            game.gameState.lastWordIndex = body.wordIndex;
+                            await game.save();
+                        }
                     }
                 }
             } catch (err) {
                 console.log(err);
+            }
+        });
+
+        socket.on("round_ended", async (body) => {
+            try {
+                if (!body.gameId) {
+                    return;
+                }
+
+                const game = await endRound({ gameId: body.gameId });
+
+                if (!game) return false;
+
+                io.to(body.gameId).emit("round_ended", {
+                    _id: game._id,
+                    players: game.players,
+                    playersTurn: game.gameState.playersTurn,
+                    playersTurnIds: game.gameState.playersTurnIds,
+                });
+            } catch (error) {
+                console.log(error);
             }
         });
     });
