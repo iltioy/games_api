@@ -151,8 +151,13 @@ module.exports = (io) => {
 
                         game.gameStack = words;
                         game.gameStatus = "playing";
+                        game.gameState.lastWordIndex = 0;
                         await game.save();
-                        io.to(gameId).emit("round_started", { words, gameId });
+                        io.to(gameId).emit("round_started", {
+                            words,
+                            gameId,
+                            playersTurnsIds: game.gameState.playersTurnIds,
+                        });
                     }
                 }
             } catch (err) {
@@ -163,11 +168,7 @@ module.exports = (io) => {
         socket.on("next_word", async (body) => {
             try {
                 if (body && body.gameId) {
-                    socket.broadcast
-                        .to(body.gameId)
-                        .emit("next_word", { gameId: body.gameId });
-
-                    if (body.wordIndex) {
+                    if (body.wordIndex || body.wordIndex === 0) {
                         const game = await Game.findOne({ _id: body.gameId });
                         if (!game) {
                             return;
@@ -176,6 +177,11 @@ module.exports = (io) => {
                             game.gameState.lastWordIndex = body.wordIndex;
                             await game.save();
                         }
+                        io.to(body.gameId).emit("next_word", {
+                            gameId: body.gameId,
+                            wordId: game.gameState.lastWordIndex,
+                            playersTurnsIds: game.gameState.playersTurnIds,
+                        });
                     }
                 }
             } catch (err) {
@@ -198,6 +204,7 @@ module.exports = (io) => {
                     players: game.players,
                     playersTurn: game.gameState.playersTurn,
                     playersTurnIds: game.gameState.playersTurnIds,
+                    lastWordIndex: game.gameState.lastWordIndex,
                 });
             } catch (error) {
                 console.log(error);

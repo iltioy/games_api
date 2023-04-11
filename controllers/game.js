@@ -102,7 +102,7 @@ const startGame = async ({ userId, gameId }) => {
         const isUserInGame = game.playersIds.includes(userId);
 
         if (isUserInGame) {
-            game.gameStatus = "playing";
+            game.gameStatus = "break";
 
             const turnId = game.gameState.playersTurn;
             const numOfPlayers = _.uniq(game.playersIds).length;
@@ -156,7 +156,6 @@ const endRound = async ({ gameId }) => {
         if (!game) {
             return false;
         }
-        console.log(game.gameStatus);
         if (game.gameStatus !== "playing") {
             return false;
         }
@@ -174,7 +173,6 @@ const endRound = async ({ gameId }) => {
             game.players[(turnId + 1) % numOfPlayers]._id
         );
         game.gameState.playersReady = [];
-        game.gameState.lastWordIndex = 0;
         game.gameStatus = "break";
 
         await game.save();
