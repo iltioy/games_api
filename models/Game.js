@@ -21,6 +21,10 @@ const GameStateSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    prevPlayersIds: {
+        type: [String],
+        default: [],
+    },
 });
 
 const GameSchema = new mongoose.Schema(

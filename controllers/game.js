@@ -164,6 +164,8 @@ const endRound = async ({ gameId }) => {
         const turnId = game.gameState.playersTurn;
         const numOfPlayers = _.uniq(game.playersIds).length;
 
+        game.gameState.prevPlayersIds = game.gameState.playersTurnIds;
+
         game.gameState.playersTurnIds = [];
 
         game.gameState.playersTurnIds.push(

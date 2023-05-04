@@ -126,7 +126,7 @@ module.exports = (io) => {
             }
         });
 
-        socket.on("player_ready", async ({ _id, gameId }) => {
+        socket.on("player_ready", async ({ _id, gameId, scores }) => {
             try {
                 if (!_id || !gameId) {
                     return;
@@ -149,6 +149,37 @@ module.exports = (io) => {
                             return;
                         }
 
+                        console.log(scores);
+                        for (
+                            let i = 0;
+                            i < game.gameState.prevPlayersIds.length;
+                            i++
+                        ) {
+                            let playerScore = game.gameState.scores.filter(
+                                (el) =>
+                                    el.playerId ===
+                                    game.gameState.prevPlayersIds[i]
+                            )[0]?.score;
+                            if (!playerScore) {
+                                playerScore = 0;
+                            }
+
+                            console.log(playerScore, scores);
+
+                            game.gameState.scores =
+                                game.gameState.scores.filter(
+                                    (el) =>
+                                        el.playerId !==
+                                        game.gameState.prevPlayersIds[i]
+                                );
+
+                            game.gameState.scores.push({
+                                playerId: game.gameState.prevPlayersIds[i],
+                                score: (playerScore += scores),
+                            });
+                            console.log("game", game.gameState.scores);
+                        }
+
                         game.gameStack = words;
                         game.gameStatus = "playing";
                         game.gameState.lastWordIndex = 0;
@@ -157,6 +188,7 @@ module.exports = (io) => {
                             words,
                             gameId,
                             playersTurnsIds: game.gameState.playersTurnIds,
+                            playersScores: game.gameState.scores,
                         });
                     }
                 }
@@ -206,6 +238,26 @@ module.exports = (io) => {
                     playersTurnIds: game.gameState.playersTurnIds,
                     lastWordIndex: game.gameState.lastWordIndex,
                 });
+            } catch (error) {
+                console.log(error);
+            }
+        });
+
+        socket.on("change_word_score", async (body) => {
+            try {
+                if (!body.gameId) {
+                    return;
+                }
+
+                if ((body.index, body.value)) {
+                    io.to(body.gameId).emit("change_word_score", {
+                        game: {
+                            _id: body.gameId,
+                        },
+                        value: body.value,
+                        index: body.index,
+                    });
+                }
             } catch (error) {
                 console.log(error);
             }
